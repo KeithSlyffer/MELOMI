@@ -10,36 +10,51 @@ import {
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 
-const LoginScreen = () => {
+const Register = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
 
-  // Placeholder for Google authentication
-  const handleGoogleAuth = async () => {
-    Alert.alert("Google Auth", "Google authentication triggered");
-  };
-
-  const handleLogin = () => {
-    if (email === "" || password === "") {
-      Alert.alert("Error", "Please enter both email and password");
+  const handleRegister = () => {
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    Alert.alert("Success", "Logged in successfully");
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+    Alert.alert("Success", "Account created successfully");
+  };
+
+  const handleGoogleAuth = () => {
+    Alert.alert("Google Auth", "Google authentication triggered");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Melomi!</Text>
+      <Text style={styles.title}>Create Account</Text>
+
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          placeholderTextColor="#9CA3AF"
+          value={name}
+          onChangeText={setName}
+        />
+      </View>
 
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
           placeholder="Email"
           placeholderTextColor="#9CA3AF"
+          keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
-          keyboardType="email-address"
         />
       </View>
 
@@ -48,14 +63,25 @@ const LoginScreen = () => {
           style={styles.input}
           placeholder="Password"
           placeholderTextColor="#9CA3AF"
+          secureTextEntry
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
         />
       </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Log In</Text>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          placeholderTextColor="#9CA3AF"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+      </View>
+
+      <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+        <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleAuth}>
@@ -68,10 +94,9 @@ const LoginScreen = () => {
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.replace("/tabs/register")}>
+      <TouchableOpacity onPress={() => router.replace("/")}>
         <Text style={styles.footerText}>
-          Don't have an account?{" "}
-          <Text style={styles.registerLink}>Register</Text>
+          Already have an account? <Text style={styles.loginLink}>Login</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -111,20 +136,20 @@ const styles = StyleSheet.create({
     color: "#2C3E50",
     fontSize: 16,
   },
-  loginButton: {
+  registerButton: {
     width: "100%",
-    backgroundColor: "#7BC9A6",
+    backgroundColor: "#FF7F87",
     borderRadius: 10,
     paddingVertical: 15,
     alignItems: "center",
     marginVertical: 20,
-    shadowColor: "#7BC9A6",
+    shadowColor: "#FF7F87",
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 4,
     elevation: 3,
   },
-  loginButtonText: {
+  registerButtonText: {
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "500",
@@ -158,10 +183,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#718096",
   },
-  registerLink: {
-    color: "#FF7F87",
+  loginLink: {
+    color: "#7BC9A6",
     fontWeight: "600",
   },
 });
 
-export default LoginScreen;
+export default Register;
