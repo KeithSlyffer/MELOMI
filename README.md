@@ -1,50 +1,33 @@
-# Welcome to your Expo app 👋
+# 🎵 Melomi – Mood & Music Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## A simple and beautiful way to track your mood with a song each day.
 
-## Get started
+Melomi is a mobile app designed to help you reflect on your daily mood and feelings by associating each day with a song. Over time, it compiles these moments into a calendar view, giving you insights into your mental health and emotional trends through music.
 
-1. Install dependencies
+## ✨Features
 
-   ```bash
-   npm install
-   ```
+- Daily Song Selection: Add a song to represent your day.
+- Mood Tracking: Track your feelings and mental health in a simple way.
+- Monthly Calendar: View your mood history in a visually appealing calendar.
+- Insights & Stats: Analyze your mood trends and patterns over time.
+- Customizable Pastel Theme: Aesthetic design with soft, calming pastel colors.
+- Friendly Mascot: Melomi guides you through the app experience.
 
-2. Start the app
+## 🛠️ Tech Stack
 
-   ```bash
-    npx expo start
-   ```
+- React Native
+- Expo
+- Firebase
+- TypeScript
+- Tailwind CSS
 
-In the output, you'll find options to open the app in a
+## 📈 Roadmap
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Daily Song & Mood Tracking ✅
+- Calendar View for Monthly Overview ✅
+- Song Recommendations Based on Mood
+- Integration with Spotify/Apple Music
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Authors
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [@KeithSlyffer](https://github.com/KeithSlyffer)
