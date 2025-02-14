@@ -8,7 +8,9 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { FontAwesome } from "@expo/vector-icons";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
+import auth from "../config/firebaseConfig";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -17,7 +19,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -26,17 +28,46 @@ const Register = () => {
       Alert.alert("Error", "Passwords do not match");
       return;
     }
-    Alert.alert("Success", "Account created successfully");
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: name });
+
+      Alert.alert("Success", "Account created successfully!");
+      router.replace("/tabs/home");
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        console.error("Registration error:", error);
+        Alert.alert("Error", getFirebaseErrorMessage(error));
+      } else {
+        console.error("Unexpected error:", error);
+        Alert.alert("Error", "An unexpected error occurred.");
+      }
+    }
   };
 
-  const handleGoogleAuth = () => {
-    Alert.alert("Google Auth", "Google authentication triggered");
+  const getFirebaseErrorMessage = (error: FirebaseError) => {
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        return "This email is already in use. Please try another.";
+      case "auth/invalid-email":
+        return "The email address is invalid.";
+      case "auth/weak-password":
+        return "The password is too weak. Use at least 6 characters.";
+      default:
+        return "An error occurred. Please try again.";
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
-
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -46,7 +77,6 @@ const Register = () => {
           onChangeText={setName}
         />
       </View>
-
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -57,7 +87,6 @@ const Register = () => {
           onChangeText={setEmail}
         />
       </View>
-
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -68,7 +97,6 @@ const Register = () => {
           onChangeText={setPassword}
         />
       </View>
-
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -79,25 +107,8 @@ const Register = () => {
           onChangeText={setConfirmPassword}
         />
       </View>
-
       <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
         <Text style={styles.registerButtonText}>Register</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleAuth}>
-        <FontAwesome
-          name="google"
-          size={24}
-          color="#DB4437"
-          style={styles.googleIcon}
-        />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.replace("/")}>
-        <Text style={styles.footerText}>
-          Already have an account? <Text style={styles.loginLink}>Login</Text>
-        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -153,39 +164,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "500",
-  },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "#CBD5E0",
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-    justifyContent: "center",
-  },
-  googleIcon: {
-    marginRight: 10,
-  },
-  googleButtonText: {
-    fontSize: 16,
-    color: "#2C3E50",
-  },
-  footerText: {
-    fontSize: 16,
-    color: "#718096",
-  },
-  loginLink: {
-    color: "#7BC9A6",
-    fontWeight: "600",
   },
 });
 

@@ -6,12 +6,19 @@ import {
   Text,
   Image,
   ScrollView,
+  Modal,
+  Button,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
+import auth from "../config/firebaseConfig";
+import { signOut } from "firebase/auth";
+import { useRouter } from "expo-router";
 
 const Home: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<string>("");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const router = useRouter();
 
   const handleDayPress = (day: any) => {
     const formattedDate = day.dateString.split("-").reverse().join("/");
@@ -26,8 +33,34 @@ const Home: React.FC = () => {
     console.log("In-depth pressed");
   };
 
+  const handleProfilePress = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      console.log("Logged out");
+      setIsModalVisible(false);
+      router.replace("/");
+    } catch (error) {
+      console.error("Logout error", error);
+    }
+  };
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Melomi</Text>
+        <TouchableOpacity onPress={handleProfilePress}>
+          <Image
+            source={{
+              uri: "https://i.scdn.co/image/ab676161000051749056cebd093a4111da089f79",
+            }}
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
+      </View>
+
       <Calendar
         style={styles.calendar}
         theme={{
@@ -109,6 +142,39 @@ const Home: React.FC = () => {
       <TouchableOpacity style={styles.floatingButton}>
         <Ionicons name="add" size={24} color="white" />
       </TouchableOpacity>
+
+      {/* Profile Modal */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            alignItems: "flex-end",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#FFFFFF",
+              padding: 20,
+              width: "70%",
+              borderTopLeftRadius: 10,
+              borderTopRightRadius: 10,
+            }}
+          >
+            <Button
+              title="Profile"
+              onPress={() => console.log("Profile clicked")}
+            />
+            <Button title="Logout" onPress={handleLogout} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -116,7 +182,24 @@ const Home: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F0F4F8", // Fondo pastel azul grisáceo
+    backgroundColor: "#F0F4F8",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#F0F4F8",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#2C3E50",
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   calendar: {
     width: "100%",
@@ -129,60 +212,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 100,
   },
-  statsContainer: {
-    marginTop: 20,
-    marginHorizontal: 15,
-    padding: 20,
-    backgroundColor: "#FFFFFF", // Contenedor blanco con borde sutil
-    borderRadius: 10,
-    borderColor: "#CBD5E0",
-    borderWidth: 1,
-    marginBottom: 10,
-  },
-  statsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  statsTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2C3E50",
-  },
-  inDepthText: {
-    color: "#7BC9A6", // Color acento pastel para el enlace
-    fontSize: 14,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  statBox: {
-    width: "30%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "#CBD5E0",
-    borderWidth: 1,
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#2C3E50",
-  },
-  statLabel: {
-    fontSize: 14,
-    color: "#718096",
-    marginTop: 5,
-  },
   spotifyContainer: {
     marginTop: 20,
     marginHorizontal: 15,
     padding: 20,
-    backgroundColor: "#FFFFFF", // Contenedor blanco con borde sutil
+    backgroundColor: "#FFFFFF",
     borderRadius: 10,
     borderColor: "#CBD5E0",
     borderWidth: 1,
@@ -215,16 +249,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#718096",
   },
-  playButton: {
-    marginLeft: 15,
-  },
   floatingButton: {
     position: "absolute",
     bottom: 20,
     alignSelf: "center",
     width: 60,
     height: 60,
-    backgroundColor: "#7BC9A6", // Botón flotante con el color acento pastel
+    backgroundColor: "#7BC9A6",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
@@ -233,6 +264,55 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+  },
+  statsContainer: {
+    marginTop: 20,
+    marginHorizontal: 15,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderColor: "#CBD5E0",
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  statsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  statsTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#2C3E50",
+  },
+  inDepthText: {
+    color: "#7BC9A6",
+    fontSize: 14,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  statBox: {
+    width: "30%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    padding: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "#CBD5E0",
+    borderWidth: 1,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#2C3E50",
+  },
+  statLabel: {
+    fontSize: 14,
+    color: "#718096",
+    marginTop: 5,
   },
 });
 

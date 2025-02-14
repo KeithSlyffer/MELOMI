@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -6,27 +6,75 @@ import {
   Text,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+} from "firebase/auth";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
   const router = useRouter();
 
-  // Placeholder for Google authentication
-  const handleGoogleAuth = async () => {
-    Alert.alert("Google Auth", "Google authentication triggered");
-  };
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setLoggedIn(true);
+        router.replace("/tabs/home");
+      } else {
+        setLoggedIn(false);
+        setAuthLoading(false);
+      }
+    });
 
-  const handleLogin = () => {
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
     if (email === "" || password === "") {
       Alert.alert("Error", "Please enter both email and password");
       return;
     }
-    Alert.alert("Success", "Logged in successfully");
+
+    setLoading(true);
+    const auth = getAuth();
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+      Alert.alert("Success", `Logged in as ${user.displayName || user.email}`);
+      router.replace("/tabs/home");
+    } catch (error) {
+      Alert.alert("Error", "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleGoogleAuth = async () => {
+    Alert.alert("Google Auth", "Google authentication triggered");
+  };
+
+  if (authLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#7BC9A6" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -54,8 +102,18 @@ const LoginScreen = () => {
         />
       </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Log In</Text>
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={handleLogin}
+        disabled={loading || loggedIn}
+      >
+        <Text style={styles.loginButtonText}>
+          {loading
+            ? "Logging in..."
+            : loggedIn
+            ? "Already logged in"
+            : "Log In"}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleAuth}>
@@ -161,6 +219,12 @@ const styles = StyleSheet.create({
   registerLink: {
     color: "#FF7F87",
     fontWeight: "600",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F0F4F8",
   },
 });
 
