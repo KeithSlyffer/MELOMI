@@ -6,18 +6,13 @@ import {
   Text,
   Image,
   ScrollView,
-  Modal,
-  Button,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
-import auth from "../config/firebaseConfig";
-import { signOut } from "firebase/auth";
 import { useRouter } from "expo-router";
 
 const Home: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<string>("");
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const router = useRouter();
 
   const handleDayPress = (day: any) => {
@@ -34,19 +29,9 @@ const Home: React.FC = () => {
   };
 
   const handleProfilePress = () => {
-    setIsModalVisible(true);
+    router.push("/tabs/profile");
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      console.log("Logged out");
-      setIsModalVisible(false);
-      router.replace("/");
-    } catch (error) {
-      console.error("Logout error", error);
-    }
-  };
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -142,39 +127,6 @@ const Home: React.FC = () => {
       <TouchableOpacity style={styles.floatingButton}>
         <Ionicons name="add" size={24} color="white" />
       </TouchableOpacity>
-
-      {/* Profile Modal */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            alignItems: "flex-end",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "#FFFFFF",
-              padding: 20,
-              width: "70%",
-              borderTopLeftRadius: 10,
-              borderTopRightRadius: 10,
-            }}
-          >
-            <Button
-              title="Profile"
-              onPress={() => console.log("Profile clicked")}
-            />
-            <Button title="Logout" onPress={handleLogout} />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
