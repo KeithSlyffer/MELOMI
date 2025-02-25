@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -6,18 +6,73 @@ import {
   Text,
   Image,
   ScrollView,
+  Modal,
+  TextInput,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useRouter } from "expo-router";
 
+const CLIENT_ID = process.env.EXPO_PUBLIC_CLIENT_ID;
+const CLIENT_SECRET = process.env.EXPO_PUBLIC_CLIENT_SECRET;
+
 const Home: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<string>("");
+  const [token, setToken] = useState<string>("");
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [markedDates, setMarkedDates] = useState<Record<string, any>>({});
   const router = useRouter();
 
+  useEffect(() => {
+    fetchSpotifyToken();
+    const interval = setInterval(fetchSpotifyToken, 3600000); // Refresh every hour
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchSpotifyToken = async () => {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`,
+    });
+    const data = await response.json();
+    setToken(data.access_token);
+  };
+
   const handleDayPress = (day: any) => {
-    const formattedDate = day.dateString.split("-").reverse().join("/");
-    setSelectedDay(formattedDate);
+    setSelectedDay(day.dateString);
+    setModalVisible(true);
+  };
+
+  const searchSpotify = async (query: string) => {
+    if (!token) return;
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+        query
+      )}&type=track&limit=10`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const data = await response.json();
+    setSearchResults(data.tracks?.items || []);
+  };
+
+  const handleSongSelect = (song: any) => {
+    setMarkedDates({
+      ...markedDates,
+      [selectedDay]: {
+        selected: true,
+        selectedColor: "#7BC9A6",
+        selectedTextColor: "#FFFFFF",
+      },
+    });
+    setModalVisible(false);
   };
 
   const handlePlayPress = () => {
@@ -64,15 +119,59 @@ const Home: React.FC = () => {
           textMonthFontSize: 16,
           textDayHeaderFontSize: 14,
         }}
-        markedDates={{
-          [selectedDay]: {
-            selected: true,
-            selectedColor: "#7BC9A6",
-            selectedTextColor: "#2C3E50",
-          },
-        }}
+        markedDates={markedDates}
         onDayPress={handleDayPress}
       />
+
+      <Modal
+        statusBarTranslucent
+        visible={isModalVisible}
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchBar}
+              placeholder="Search for a song"
+              placeholderTextColor="#888"
+              value={searchQuery}
+              onChangeText={(text) => {
+                setSearchQuery(text);
+                searchSpotify(text);
+              }}
+            />
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color="#2C3E50" />
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={searchResults}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => handleSongSelect(item)}
+                style={styles.songItem}
+              >
+                <Image
+                  source={{ uri: item.album.images[0]?.url }}
+                  style={styles.songCover}
+                />
+                <View style={styles.songDetails}>
+                  <Text style={styles.songName}>{item.name}</Text>
+                  <Text style={styles.songArtist}>
+                    {item.artists.map((artist: any) => artist.name).join(", ")}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={styles.resultsContainer}
+          />
+        </View>
+      </Modal>
 
       <ScrollView
         style={styles.scrollContainer}
@@ -123,10 +222,6 @@ const Home: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-
-      <TouchableOpacity style={styles.floatingButton}>
-        <Ionicons name="add" size={24} color="white" />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -157,6 +252,12 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "stretch",
     marginTop: 0,
+  },
+  songResult: {
+    padding: 10,
+    fontSize: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
   },
   scrollContainer: {
     flex: 1,
@@ -200,22 +301,6 @@ const styles = StyleSheet.create({
   artistName: {
     fontSize: 16,
     color: "#718096",
-  },
-  floatingButton: {
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
-    width: 60,
-    height: 60,
-    backgroundColor: "#7BC9A6",
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
   statsContainer: {
     marginTop: 20,
@@ -265,6 +350,60 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#718096",
     marginTop: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#F0F4F8",
+    paddingTop: 80,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+  searchBar: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#CBD5E0",
+    fontSize: 16,
+    color: "#2C3E50",
+  },
+  closeButton: {
+    marginLeft: 10,
+    padding: 10,
+  },
+  resultsContainer: {
+    paddingHorizontal: 15,
+  },
+  songItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+  },
+  songCover: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    marginRight: 15,
+  },
+  songDetails: {
+    flex: 1,
+  },
+  songName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2C3E50",
+  },
+  songArtist: {
+    fontSize: 14,
+    color: "#718096",
+    marginTop: 4,
   },
 });
 
